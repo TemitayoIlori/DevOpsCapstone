@@ -59,7 +59,7 @@ jobs:
                --template-file kubernetes.yml \
                --tags project=${ENVIRONMENT_NAME}-Capstone \
                --stack-name capstoneEKSCluster-${CIRCLE_WORKFLOW_ID} \
-               --parameter-overrides file://kubernetesParameter.json \
+               --parameter-overrides file://KubernetesParameter.json \
                --capabilities CAPABILITY_NAMED_IAM
             no_output_timeout: 15m
 
