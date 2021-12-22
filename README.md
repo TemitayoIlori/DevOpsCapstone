@@ -1,65 +1,11 @@
-# react-docker-aws
+# Udacity Capstone Project
+#react-docker-aws
 
-watch the demo at [https://youtu.be/7yXmn14xxCE](https://youtu.be/7yXmn14xxCE)
+In this project, I deployed React Application on docker. I used Open Source Nginx to deploy an application that says "Hello World. My name is Temitayo Ilori."
 
-## getting started (for intel based machines)
-1. install node modules:
+I used the rolling deployment type.
 
-    ```sh
-    npm install
-    ```
-    
-2. build the docker container:
+After creating a Dockerfile, I deployed the application by running a shell script called deploy.sh.
 
-    ```sh
-    docker build -t react-docker-aws:latest .
-    ```
+Attached is are screenshots of outputs when deploying the application.
 
-3. run the docker container:
-
-    ```sh
-    docker run -p 3000:80 react-docker-aws:latest
-    ```
-
-4. navigate to:
-
-    ```sh
-    http://localhost:3000
-    ```
-
-5. deploy:
-
-    ```sh
-    bash scripts/intel-deploy.sh
-    ```
-
-## getting started (for m1 macs or arm based machines)
-1. install node modules:
-
-    ```sh
-    npm install
-    ```
-    
-2. build the docker container:
-
-    ```sh
-    docker build -f Dockerfile.arm --platform=linux/amd64 -t react-docker-aws:latest .
-    ```
-
-3. run the docker container
-
-    ```sh
-    docker run -p 3000:80 react-docker-aws:latest
-    ```
-
-4. navigate to:
-
-    ```sh
-    http://localhost:3000
-    ```
-
-5. deploy:
-
-    ```sh
-    bash scripts/arm-deploy.sh
-    ```
