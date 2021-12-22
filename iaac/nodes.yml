@@ -71,7 +71,7 @@ Resources:
         Fn::Split:
           - ","
           - Fn::ImportValue:
-              Fn::Sub: ${EnvironmentName}-PUB-NETS
+              Fn::Sub: ${EnvironmentName}-PublicSubnet
 
 Outputs:
   NodeInstanceRole:
