@@ -1,43 +1,52 @@
-version: 2
-jobs:
-  build:
-    docker:
-      # specify the version you desire here
-      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
-      - image: circleci/python:3.6.7-stretch
+version: 2.1
 
-    working_directory: ~/repo
+orbs:
+  slack: circleci/slack@4.2.0
+  aws-cli: circleci/aws-cli@2.0.3 
+  aws-eks: circleci/aws-eks@0.2.3
+
+jobs:
+  build-frontend:
+    docker:
+        - image: circleci/node:16.13.0
+    
+    # The current directory will be the place where all the steps will run
+    working_directory: ~/project
 
     steps:
-      - checkout
-
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "package.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-
-      - run:
-          name: install dependencies
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            sudo make install
-      - save_cache:
-          paths:
-            - ./venv
-          key: v1-dependencies-{{ checksum "package.json" }}
-        
-      # run tests!
-      - run:
-          name: run tests
-          command: |
-            . venv/bin/activate
-            make test
-      # run lints!
-      - run:
-          name: run lint
-          command: |
-            . venv/bin/activate
-            make lint
+        # Checkout the code from the git branch into the working_directory
+        - checkout
+        # Log the current branch for debugging purposes
+        - run:
+            name: Show current branch
+        # Restore local dependencies (node_modules) from the CircleCI cache if it exists
+        - restore_cache:
+            keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+        # Install project dependencies
+        - run:
+            name: Install local dependencies
+            command: npm install
+        # Cache local dependencies in CircleCI storage if they don't exist
+        - save_cache:
+            key: v1-dependencies-{{ checksum "package.json" }}
+            paths:
+                - node_modules
+        # Install project dependencies
+        - run:
+            name: Install local dependencies
+            command: 
+              npm update
+              #ng update
+              #ng update--all--force
+        - run:
+            name: Build app
+            command: |
+              sudo npm i
+              npm run build
+workflows:
+  default:
+      jobs:
+        - build-frontend
