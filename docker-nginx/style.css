@@ -1,0 +1,25 @@
+body {
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+  }
+   h2   {color: white;}
+  .content-footer {
+    margin: 50px 0;
+    padding: 20px 0;
+    text-align: center;
+    background-color: #73A8C2;
+    text-decoration: none;
+  }
+  .social > li {
+    display: inline-block;
+    margin: 0 5px;
+  }
+  a {
+      font-weight: bold;
+      text-decoration: none;
+      color: #F1C863;
+  }
+  ul.a {
+    list-style-type: circle;
+  }  
