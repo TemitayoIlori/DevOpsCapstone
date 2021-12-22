@@ -35,7 +35,7 @@ Resources:
       SecurityGroups:
         - Ref: SecGroup
       KeyName: !Ref SSHKeyName
-      ImageId: !Ref AMI
+      ImageId: !Ref ImageId
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName}-ec2-instance1
@@ -49,7 +49,7 @@ Resources:
       SecurityGroups:
         - Ref: SecGroup
       KeyName: !Ref SSHKeyName
-      ImageId: !Ref AMI
+      ImageId: !Ref ImageId
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName}-ec2-instance2
