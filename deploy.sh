@@ -12,7 +12,7 @@ echo "Post-Build Steps:"
 echo "pushing image to AWS ECR..."
 docker push 453111954939.dkr.ecr.us-east-1.amazonaws.com/react-docker-aws:latest
 
-#echo "updating AWS ECS service..."
-#aws ecs update-service --cluster <CLUSTER_NAME> --service <SERVICE_NAME> --force-new-deployment
+echo "updating AWS ECS service..."
+aws ecs update-service --cluster react-cluster --service react-sc --force-new-deployment
 
 echo "Done!"
