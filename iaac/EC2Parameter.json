@@ -1,0 +1,14 @@
+[
+	{
+		"ParameterKey": "EnvironmentName",
+		"ParameterValue": "Capstone"
+	},
+	{
+		"ParameterKey": "SSHKeyName",
+		"ParameterValue": "udacity"
+    },
+	{
+		"ParameterKey": "AMI",
+		"ParameterValue": "ami-02fe94dee086c0c37"
+	}
+]

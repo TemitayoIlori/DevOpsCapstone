@@ -1,0 +1,57 @@
+Description: >
+  Temitayo Ilori Capstone
+  
+Parameters:
+  EnvironmentName:
+    Description: An Environment name that will be prefixed to resources
+    Default: Capstone
+    Type: String
+  SSHKeyName:
+    Description: SSH key for access
+    Default: udacity
+    Type: String
+  ImageId:
+    Description: AMI
+    Default: ami-02fe94dee086c0c37
+    Type: String
+
+Resources:
+
+  SecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${EnvironmentName}-ec2-SecurityGroup
+      GroupDescription: Allow port 22
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  ec2Instance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      SecurityGroups:
+        - Ref: SecGroup
+      KeyName: !Ref SSHKeyName
+      ImageId: !Ref AMI
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-ec2-instance1
+        - Key: Capstone
+          Value: !Ref EnvironmentName
+
+  ec2Instance2:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      SecurityGroups:
+        - Ref: SecGroup
+      KeyName: !Ref SSHKeyName
+      ImageId: !Ref AMI
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-ec2-instance2
+        - Key: Capstone
+          Value: !Ref EnvironmentName
