@@ -1,0 +1,135 @@
+version: 2.1
+
+orbs:
+  kubernetes: circleci/kubernetes@0.12.0
+  aws-cli: circleci/aws-cli@2.0
+  aws-eks: circleci/aws-eks@0.2.3
+
+jobs:
+  build-app:
+    docker:
+      - image: circleci/node:16.13.0
+    steps:
+      - checkout
+      - run:
+          name: Build front-end
+          command: |
+            # Your code here
+            sudo npm i
+            npm run build
+      - save_cache:
+          key: frontend-build
+          paths: [node_modules]
+  lint-app:
+    docker:
+      - image: circleci/node:16.13.0
+    steps:
+      # Checkout code from git
+      - checkout
+      # Restore from cache
+      - restore_cache:
+          key: frontend-build
+      # Your job code here
+      - run:
+          name: lint app
+          command: |
+            # Your code here
+            npm run lint
+  lint-docker:
+    docker:
+      - image: python:3.7.3-stretch
+    steps:
+      # Checkout code from git
+      - checkout
+      # Restore from cache
+      - restore_cache:
+          key: frontend-build
+      # Your job code here
+      - run:
+          name: install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64 &&\
+            chmod +x /bin/hadolint
+      - run:
+          name: run lint
+          command: |
+            . venv/bin/activate
+            hadolint ./Dockerfile
+  test-app:
+    docker:
+      - image: circleci/node:16.13.0
+    steps:
+      # Checkout code from git
+      - checkout
+      # Restore from cache
+      - restore_cache:
+          key: frontend-build
+      # Your job code here
+      - run:
+          name: test frontend
+          command: |
+            # Your code here
+            npm run test:coverage
+  push-app:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Build docker container
+          command: |
+                docker login --username ${DOCKER_Username} --password ${DOCKER_Password}
+                docker build -t awscicd:latest .
+                docker images ls
+                docker tag awscicd ${DOCKER_Username}/awscicd:latest
+                docker push ${DOCKER_Username}/awscicd:latest
+  deploy:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Install AWS CLI dependencies
+          working_directory: /tmp
+          command: |
+            sudo apt-get update && sudo apt-get install -yy less
+            sudo apt-get install unzip -y
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+      - run:
+          name: Update Docker Image in ECS
+          command: |
+            echo "Pre-Build Steps:"
+			echo "authenticating with AWS ECR..."
+			aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 453111954939.dkr.ecr.us-west-2.amazonaws.com
+
+			echo "Build Steps:"
+			echo "building image..."
+			docker build -t 453111954939.dkr.ecr.us-east-1.amazonaws.com/react-docker-aws:latest .
+
+			echo "Post-Build Steps:"
+			echo "pushing image to AWS ECR..."
+			docker push 453111954939.dkr.ecr.us-east-1.amazonaws.com/react-docker-aws:latest
+
+			echo "updating AWS ECS service..."
+			aws ecs update-service --cluster react-cluster --service react-sc --force-new-deployment
+
+			echo "Done!"
+workflows:
+  default:
+    jobs:
+      - build-app
+      - lint-app:
+          requires: [build-app]
+      - lint-docker:
+          requires: [build-app]
+      - test-app:
+          requires: [build-app]
+      - push-app:
+          requires: [test-app, lint-app, lint-docker]
+          filters:
+            branches:
+              only: [main]
+      - deploy:
+          requires: [push-app]
