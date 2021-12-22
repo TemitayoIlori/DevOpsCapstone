@@ -28,7 +28,7 @@ jobs:
             cd docker-nginx
             docker build -t temmysam/udacity:latest  .
          - run: |
-            echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKER_Password --password-stdin
+            echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKER_Username --password $DOCKER_Password
             docker push temmysam/udacity:latest
    create_network:
       docker:
