@@ -56,7 +56,7 @@ jobs:
             command: |
                cd iaac
                aws cloudformation deploy \
-               --template-file kubernetes.yml \
+               --template-file Kubernetes.yml \
                --tags project=${ENVIRONMENT_NAME}-Capstone \
                --region us-east-1 \
                --stack-name capstoneEKSCluster-${CIRCLE_WORKFLOW_ID} \
