@@ -14,7 +14,20 @@ jobs:
         - checkout
         - run:
             name: Show current branch
-            command: echo ${CIRCLE_BRANCH}
+            command: 
+              echo ${CIRCLE_BRANCH}
+              echo "Pre-Build Steps:"
+              echo "authenticating with AWS ECR..."
+              aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 453111954939.dkr.ecr.us-west-2.amazonaws.com
+
+              echo "Build Steps:"
+              echo "building image..."
+              docker build -t 453111954939.dkr.ecr.us-east-1.amazonaws.com/react-docker-aws:latest .
+
+              echo "Post-Build Steps:"
+              echo "pushing image to AWS ECR..."
+              docker push 453111954939.dkr.ecr.us-east-1.amazonaws.com/react-docker-aws:latest
+                      
         - restore_cache:
             keys:
             - v1-dependencies-{{ checksum "package.json" }}
