@@ -42,6 +42,7 @@ jobs:
                aws cloudformation deploy \
                --template-file network.yml \
                --tags project=${ENVIRONMENT_NAME}-Capstone \
+               --region us-east-1 \
                --stack-name capstoneNETWORK-${CIRCLE_WORKFLOW_ID} \
                --parameter-overrides file://network-parameter.json
               
