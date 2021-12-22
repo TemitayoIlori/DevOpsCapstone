@@ -8,7 +8,7 @@
 		"ParameterValue": "udacity"
     },
 	{
-		"ParameterKey": "AMI",
+		"ParameterKey": "ImageId",
 		"ParameterValue": "ami-02fe94dee086c0c37"
 	}
 ]
