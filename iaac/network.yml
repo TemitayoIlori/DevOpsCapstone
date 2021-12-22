@@ -1,5 +1,5 @@
 Description: >
-    Melisa Bekan Capstone Project6 / Creates Network
+    Temitayo Ilori Capstone
 
 Parameters:
 
@@ -11,7 +11,6 @@ Parameters:
     VpcCIDR: 
         Description: Please enter the IP range (CIDR notation) for this VPC
         Type: String
-        #Defaults will be repladed with what we have in parameter file
         Default: 10.0.0.0/16
         
     PublicSubnet1CIDR:
