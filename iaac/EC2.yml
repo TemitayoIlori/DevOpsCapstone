@@ -11,7 +11,7 @@ Parameters:
     Default: udacity
     Type: String
   ImageId:
-    Description: AMImageId
+    Description: ImageId
     Default: ami-02fe94dee086c0c37
     Type: String
 
