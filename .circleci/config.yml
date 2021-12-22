@@ -58,6 +58,7 @@ jobs:
                aws cloudformation deploy \
                --template-file kubernetes.yml \
                --tags project=${ENVIRONMENT_NAME}-Capstone \
+               --region us-east-1 \
                --stack-name capstoneEKSCluster-${CIRCLE_WORKFLOW_ID} \
                --parameter-overrides file://KubernetesParameter.json \
                --capabilities CAPABILITY_NAMED_IAM
@@ -75,10 +76,10 @@ jobs:
                aws cloudformation deploy \
                --template-file nodes.yml \
                --tags project=${ENVIRONMENT_NAME}-Capstone \
+               --region us-east-1 \
                --stack-name capstoneEKSNodes-${CIRCLE_WORKFLOW_ID} \
                --parameter-overrides file://nodes-parameter.json \
                --capabilities CAPABILITY_NAMED_IAM
-            # fix Too long with no output
             no_output_timeout: 15m
 
    create_ec2s:
@@ -92,6 +93,7 @@ jobs:
                cd iaac
                aws cloudformation deploy \
                --template-file EC2.yml \
+               --region us-east-1 \
                --tags project=${ENVIRONMENT_NAME}-Capstone \
                --stack-name capstoneEC2Instances-${CIRCLE_WORKFLOW_ID} \
                --parameter-overrides file:/EC2Parameter.json
