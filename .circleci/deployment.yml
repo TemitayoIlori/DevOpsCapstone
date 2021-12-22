@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: capstone-nginx
+  labels:
+    app: capstone-nginx
+spec:
+  type: LoadBalancer
+  selector:
+    app: capstone-nginx
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: capstone-nginx
+  labels:
+    app: capstone-nginx
+  namespace: default
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: capstone-nginx
+  template:
+    metadata:
+      labels:
+        app: capstone-nginx
+    spec:
+      containers:
+        - image: melisa87/udacity:capstone
+          imagePullPolicy: Always
+          name: capstone-nginx
+          ports:
+            - containerPort: 80
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate

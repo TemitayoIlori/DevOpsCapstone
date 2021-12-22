@@ -1,54 +1,177 @@
 version: 2.1
 
 orbs:
-  aws-cli: circleci/aws-cli@2.0.3 
-  aws-eks: circleci/aws-eks@0.2.3
+  aws-eks: circleci/aws-eks@1.1.0
+  kubernetes: circleci/kubernetes@0.11.2
 
 jobs:
-  build-frontend:
-    docker:
-        - image: circleci/node:16.13.0
-    working_directory: ~/project
-
-    steps:
-        - checkout
-        - run:
-            name: Show current branch
-            command: 
-              echo ${CIRCLE_BRANCH}
-              echo "Pre-Build Steps:"
-              echo "authenticating with AWS ECR..."
-              aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 453111954939.dkr.ecr.us-west-2.amazonaws.com
-
-              echo "Build Steps:"
-              echo "building image..."
-              docker build -t 453111954939.dkr.ecr.us-east-1.amazonaws.com/react-docker-aws:latest .
-
-              echo "Post-Build Steps:"
-              echo "pushing image to AWS ECR..."
-              docker push 453111954939.dkr.ecr.us-east-1.amazonaws.com/react-docker-aws:latest
-                      
-        - restore_cache:
-            keys:
-            - v1-dependencies-{{ checksum "package.json" }}
-            - v1-dependencies-
-        - run:
-            name: Install local dependencies
-            command: npm install
-        - save_cache:
-            key: v1-dependencies-{{ checksum "package.json" }}
-            paths:
-                - node_modules
-        - run:
-            name: Install local dependencies
-            command: 
-              npm update
-        - run:
-            name: Build app
+   lint:
+      docker:
+         - image: python:3.7.3-stretch
+      steps:
+         - checkout
+         - run:
+            name: Make install
             command: |
-              sudo npm i
-              npm run build
+               cd docker-nginx
+               make install
+         - run:
+            name: Lint dockerfile and html
+            command: |
+               cd docker-nginx
+               make lint
+   build:
+      machine: true
+      steps:
+         - checkout
+         - run: |
+            cd docker-nginx
+            docker build -t temmysam/udacity:latest  .
+         - run: |
+            echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKER_Password --password-stdin
+            docker push temmysam/udacity:latest
+   create_network:
+      docker:
+         - image: amazon/aws-cli
+      steps:
+         - checkout
+         - run:
+            name: Ensure network infrastructure exist
+            command: |
+               cd iaac
+               aws cloudformation deploy \
+               --template-file network.yml \
+               --tags project=${ENVIRONMENT_NAME}-Capstone \
+               --stack-name capstoneNETWORK-${CIRCLE_WORKFLOW_ID} \
+               --parameter-overrides file://network-parameter.json
+              
+   create_cluster:
+      docker:
+         - image: amazon/aws-cli
+      steps:
+         - checkout
+         - run:
+            name: Create Amazon EKS Cluster
+            command: |
+               cd iaac
+               aws cloudformation deploy \
+               --template-file kubernetes.yml \
+               --tags project=${ENVIRONMENT_NAME}-Capstone \
+               --stack-name capstoneEKSCluster-${CIRCLE_WORKFLOW_ID} \
+               --parameter-overrides file://kubernetesParameter.json \
+               --capabilities CAPABILITY_NAMED_IAM
+            no_output_timeout: 15m
+
+   create_nodes:
+      docker:
+         - image: amazon/aws-cli
+      steps:
+         - checkout
+         - run:
+            name: Attach nodes to the Amazon EKS Cluster
+            command: |
+               cd iaac
+               aws cloudformation deploy \
+               --template-file nodes.yml \
+               --tags project=${ENVIRONMENT_NAME}-Capstone \
+               --stack-name capstoneEKSNodes-${CIRCLE_WORKFLOW_ID} \
+               --parameter-overrides file://nodes-parameter.json \
+               --capabilities CAPABILITY_NAMED_IAM
+            # fix Too long with no output
+            no_output_timeout: 15m
+
+   create_ec2s:
+      docker:
+         - image: amazon/aws-cli
+      steps:
+         - checkout
+         - run:
+            name: Create EC2 instances
+            command: |
+               cd iaac
+               aws cloudformation deploy \
+               --template-file EC2.yml \
+               --tags project=${ENVIRONMENT_NAME}-Capstone \
+               --stack-name capstoneEC2Instances-${CIRCLE_WORKFLOW_ID} \
+               --parameter-overrides file:/EC2Parameter.json
+
+   create_deployment:
+    executor: aws-eks/python3
+    parameters:
+      cluster-name:
+        description: |
+          Name of the EKS cluster
+        type: string
+    steps:
+      - checkout
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: << parameters.cluster-name >>
+          install-kubectl: true
+      - kubernetes/create-or-update-resource:
+          get-rollout-status: true
+          resource-file-path: /home/circleci/project/.circleci/deployment.yml
+          resource-name: deployment/capstone-nginx
+
+   create_test:
+    executor: aws-eks/python3
+    parameters:
+      cluster-name:
+        description: |
+          capstone-nginx
+        type: string
+    steps:
+      - kubernetes/install
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: << parameters.cluster-name >>
+      - run:
+          name: Test cluster
+          command: |
+            kubectl get svc
+            kubectl get pods
+            kubectl describe pods
+            kubectl get nodes
+            kubectl get deployment
+            kubectl describe service capstone-nginx
+            kubectl get services -o wide
+
+   update_deployment:
+    executor: aws-eks/python3
+    parameters:
+      cluster-name:
+        description: |
+          Name of the EKS cluster
+        type: string
+    steps:
+      - checkout
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: << parameters.cluster-name >>
+          install-kubectl: true
+      - kubernetes/create-or-update-resource:
+          get-rollout-status: true
+          resource-file-path: /home/circleci/project/.circleci/deploymentv2.yml
+          resource-name: deployment/capstone-nginx
+      - run:
+         command: |
+            kubectl rollout status deployment capstone-nginx
+            kubectl get deployment capstone-nginx
+
 workflows:
-  default:
-      jobs:
-        - build-frontend
+  capstone:
+    jobs:
+      - lint
+      - build:
+            requires: [lint]
+      - create_network:
+            requires: [build]
+      - create_cluster:
+            requires: [create_network]
+      - create_nodes:
+            requires: [create_cluster]
+      - create_ec2s:
+            requires: [create_nodes]
+      - create_deployment:
+            cluster-name: ProjectCapstone-ekscluster
+            requires: [create_ec2s]
+      - create_test:
+            cluster-name: ProjectCapstone-ekscluster
+            requires: [create_ec2s]
