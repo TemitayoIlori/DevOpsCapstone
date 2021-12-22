@@ -96,7 +96,7 @@ jobs:
                --region us-east-1 \
                --tags project=${ENVIRONMENT_NAME}-Capstone \
                --stack-name capstoneEC2Instances-${CIRCLE_WORKFLOW_ID} \
-               --parameter-overrides file:/EC2Parameter.json
+               --parameter-overrides file://EC2Parameter.json
 
    create_deployment:
     executor: aws-eks/python3
