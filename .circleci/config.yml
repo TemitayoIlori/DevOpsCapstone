@@ -71,7 +71,7 @@ jobs:
           name: test frontend
           command: |
             # Your code here
-            npm run test:coverage
+            npm run react-docker-aws
   push-app:
     machine: true
     steps:
@@ -80,10 +80,10 @@ jobs:
           name: Build docker container
           command: |
                 docker login --username ${DOCKER_Username} --password ${DOCKER_Password}
-                docker build -t awscicd:latest .
+                docker build -t react-docker-aws:latest .
                 docker images ls
-                docker tag awscicd ${DOCKER_Username}/awscicd:latest
-                docker push ${DOCKER_Username}/awscicd:latest
+                docker tag awscicd ${DOCKER_Username}/react-docker-aws:latest
+                docker push ${DOCKER_Username}/react-docker-aws:latest
   deploy:
     machine: true
     steps:
