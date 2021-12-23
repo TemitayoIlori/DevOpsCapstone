@@ -173,8 +173,8 @@ workflows:
       - create_ec2s:
             requires: [create_nodes]
       - create_deployment:
-            cluster-name: ProjectCapstone-ekscluster
+            cluster-name: Capstone-ekscluster
             requires: [create_ec2s]
       - create_test:
-            cluster-name: ProjectCapstone-ekscluster
+            cluster-name: Capstone-ekscluster
             requires: [create_ec2s]
